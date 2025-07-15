@@ -1,0 +1,579 @@
+\def\year{2021}\relax
+%File: formatting-instructions-latex-2021.tex
+%release 2021.2
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai21}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet} % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
+
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+
+%\nocopyright
+%PDF Info Is REQUIRED.
+% For /Author, add all authors within the parentheses, separated by commas. No accents or commands.
+% For /Title, add Title in Mixed Case. No accents or commands. Retain the parentheses.
+ \pdfinfo{
+/Title (Graph Neural Network-Based Anomaly Detection in Multivariate Time Series)
+/Author (Ailin Deng, Bryan Hooi)
+/TemplateVersion (2021.2)
+} %Leave this	
+% /Title ()
+% Put your actual complete title (no codes, scripts, shortcuts, or LaTeX commands) within the parentheses in mixed case
+% Leave the space between \Title and the beginning parenthesis alone
+% /Author ()
+% Put your actual complete list of authors (no codes, scripts, shortcuts, or LaTeX commands) within the parentheses in mixed case. 
+% Each author should be only by a comma. If the name contains accents, remove them. If there are any LaTeX commands, 
+% remove them. 
+
+% DISALLOWED PACKAGES
+% \usepackage{authblk} -- This package is specifically forbidden
+% \usepackage{balance} -- This package is specifically forbidden
+% \usepackage{color (if used in text)
+% \usepackage{CJK} -- This package is specifically forbidden
+% \usepackage{float} -- This package is specifically forbidden
+% \usepackage{flushend} -- This package is specifically forbidden
+% \usepackage{fontenc} -- This package is specifically forbidden
+% \usepackage{fullpage} -- This package is specifically forbidden
+% \usepackage{geometry} -- This package is specifically forbidden
+% \usepackage{grffile} -- This package is specifically forbidden
+% \usepackage{hyperref} -- This package is specifically forbidden
+% \usepackage{navigator} -- This package is specifically forbidden
+% (or any other package that embeds links such as navigator or hyperref)
+% \indentfirst} -- This package is specifically forbidden
+% \layout} -- This package is specifically forbidden
+% \multicol} -- This package is specifically forbidden
+% \nameref} -- This package is specifically forbidden
+% \usepackage{savetrees} -- This package is specifically forbidden
+% \usepackage{setspace} -- This package is specifically forbidden
+% \usepackage{stfloats} -- This package is specifically forbidden
+% \usepackage{tabu} -- This package is specifically forbidden
+% \usepackage{titlesec} -- This package is specifically forbidden
+% \usepackage{tocbibind} -- This package is specifically forbidden
+% \usepackage{ulem} -- This package is specifically forbidden
+% \usepackage{wrapfig} -- This package is specifically forbidden
+% DISALLOWED COMMANDS
+% \nocopyright -- Your paper will not be published if you use this command
+% \addtolength -- This command may not be used
+% \balance -- This command may not be used
+% \baselinestretch -- Your paper will not be published if you use this command
+% \clearpage -- No page breaks of any kind may be used for the final version of your paper
+% \columnsep -- This command may not be used
+% \newpage -- No page breaks of any kind may be used for the final version of your paper
+% \pagebreak -- No page breaks of any kind may be used for the final version of your paperr
+% \pagestyle -- This command may not be used
+% \tiny -- This is not an acceptable font size.
+% \vspace{- -- No negative value may be used in proximity of a caption, figure, table, section, subsection, subsubsection, or reference
+% \vskip{- -- No negative value may be used to alter spacing above or below a caption, figure, table, section, subsection, subsubsection, or reference
+
+\newcommand{\eg}{\textit{e}.\textit{g}.}
+\newcommand{\ie}{\textit{i}.\textit{e}.}
+\newcommand{\modify}[1]{\textcolor{red}{#1}}
+\newcommand{\violet}[1]{\textcolor{violet}{#1}}
+\newcommand{\darkgray}[1]{\textcolor{darkgray}{#1}}
+\newcommand{\Ttr}{T_\text{train}}
+\newcommand{\Tte}{T_\text{test}}
+
+\setcounter{secnumdepth}{2} %May be changed to 1 or 2 if section numbers are desired.
+
+% The file aaai21.sty is the style file for AAAI Press
+% proceedings, working notes, and technical reports.
+%
+
+% Title
+
+% Your title must be in mixed case, not sentence case.
+% That means all verbs (including short verbs like be, is, using,and go),
+% nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
+% articles, conjunctions, and prepositions are lower case unless they
+% directly follow a colon or long dash
+
+\title{Graph Neural Network-Based Anomaly Detection in Multivariate Time Series}
+\author {
+    % Authors
+    Ailin Deng, Bryan Hooi \\
+}
+\affiliations {
+    % Affiliations
+    National University of Singapore \\
+    ailin@comp.nus.edu.sg, bhooi@comp.nus.edu.sg
+}
+ \begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+Given high-dimensional time series data (e.g., sensor data), how can we detect anomalous events, such as system faults and attacks? More challengingly, how can we do this in a way that captures complex inter-sensor relationships, and detects and explains anomalies which deviate from these relationships? Recently, deep learning approaches have enabled improvements in anomaly detection in high-dimensional datasets; however, existing methods do not explicitly learn the structure of existing relationships between variables, or use them to predict the expected behavior of time series. Our approach combines a structure learning approach with graph neural networks, additionally using attention weights to provide explainability for the detected anomalies. Experiments on two real-world sensor datasets with ground truth anomalies show that our method detects anomalies more accurately than baseline approaches, accurately captures correlations between sensors, and allows users to deduce the root cause of a detected anomaly.
+
+
+\end{abstract}
+
+
+\section{Introduction}
+
+With the rapid growth in interconnected devices and sensors in Cyber-Physical Systems (CPS) such as vehicles, industrial systems and data centres, there is an increasing need to monitor these devices to secure them against attacks. This is particularly the case for critical infrastructures such as power grids, water treatment plants, transportation, and communication networks. 
+
+Many such real-world systems involve large numbers of interconnected sensors which generate substantial amounts of time series data. For instance, in a water treatment plant, there can be numerous sensors measuring water level, flow rates, water quality, valve status, and so on, in each of their many components. Data from these sensors can be related in complex, nonlinear ways: for example, opening a valve results in changes in pressure and flow rate, leading to further changes as automated mechanisms respond to the change.
+
+As the complexity and dimensionality of such sensor data grow, humans are increasingly less able to manually monitor this data. This necessitates automated anomaly detection approaches which can rapidly detect anomalies in high-dimensional data, and explain them to human operators to allow them to diagnose and respond to the anomaly as quickly as possible.
+
+Due to the inherent lack of labeled anomalies in historical data, and the unpredictable and highly varied nature of anomalies, the anomaly detection problem is typically treated as an unsupervised learning problem. In past years, many classical unsupervised approaches have been developed, including linear model-based approaches~\cite{pca}, distance-based methods~\cite{knn}, and one-class methods based on support vector machines~\cite{oneclasssvm}. However, such approaches generally model inter-relationships between sensors in relatively simple ways: for example, capturing only linear relationships, which is insufficient for complex, highly nonlinear relationships in many real-world settings. 
+
+Recently, deep learning-based techniques have enabled improvements in anomaly detection in high-dimensional datasets. For instance, Autoencoders (AE)~\cite{autoencoding} are a popular approach for anomaly detection which uses reconstruction error as an outlier score. More recently, Generative Adversarial Networks (GANs)~\cite{li2019mad} and LSTM-based approaches~\cite{lstmencoder} have also reported promising performance for multivariate anomaly detection. However, most methods do not explicitly learn which sensors are related to one another, thus facing difficulties in modelling sensor data with many potential inter-relationships. This limits their ability to detect and explain deviations from such relationships when anomalous events occur.
+
+How do we take full advantage of the complex relationships between sensors in multivariate time series? Recently, graph neural networks (GNNs)~\cite{gcnn} have shown success in modelling graph-structured data. These include graph convolution networks (GCNs)~\cite{gcn}, graph attention networks (GATs)~\cite{gat} and multi-relational approaches~\cite{relationalgcn}. However, applying them to time series anomaly detection requires overcoming two main challenges. Firstly, different sensors have very different behaviors: e.g. one may measure water pressure, while another measures flow rate. However, typical GNNs use the same model parameters to model the behavior of each node. Secondly, in our setting, the graph edges (i.e. relationships between sensors) are initially unknown, and have to be learned along with our model, while GNNs typically treat the graph as an input.
+
+Hence, in this work, we propose our novel Graph Deviation Network (\textsc{GDN}) approach, which learns a graph of relationships between sensors, and detects deviations from these patterns\footnote{The code is available at https://github.com/d-ailin/GDN}. Our method involves four main components: 1) \textbf{Sensor Embedding}, which uses embedding vectors to flexibly capture the unique characteristics of each sensor; 2) \textbf{Graph Structure Learning} learns the relationships between pairs of sensors, and encodes them as edges in a graph; 3) \textbf{Graph Attention-Based Forecasting} learns to predict the future behavior of a sensor based on an attention function over its neighboring sensors in the graph; 4) \textbf{Graph Deviation Scoring} identifies and explains deviations from the learned sensor relationships in the graph. 
+
+% In this work, we propose a novel multivariate anomaly detection strategy with attention-based GNN to predict expected normal value based on the former time steps' information while capturing the connectivities among variables in time steps. Specifically, we first construct two graphs: a complete graph and a graph simply based on prior knowledge, such as the sensors' localization. Subsequently, given the graphs, a graph attention network is respectively employed to encode the inter-sensor(time series) information into node features. Combining with node embeddings, each node feature is utilized in a multi-layer perceptron to compute the expected normal value for the sensor. Based on how the actual value derives from our expected value, we assign an anomaly score for each sensor in a certain time step and the sum-up anomaly score is the criteria for anomalies. Besides, the node embeddings and the sensors of top-k anomaly scores in a time step can be utilized to analyze the root causes of anomalies. 
+
+To summarize, the main contributions of our work are:
+\begin{itemize}
+\item We propose \textsc{GDN}, a novel attention-based graph neural network approach which learns a graph of the dependence relationships between sensors, and identifies and explains deviations from these relationships. 
+\item We conduct experiments on two water treatment plant datasets with ground truth anomalies. Our results demonstrate that \textsc{GDN} detects anomalies more accurately than baseline approaches.
+\item We show using case studies that \textsc{GDN} provides an explainable model through its embeddings and its learned graph. We show that it helps to explain an anomaly, based on the subgraph over which a deviation is detected, attention weights, and by comparing the predicted and actual behavior on these sensors.
+\end{itemize}
+ 
+
+\section{Related Work}
+%todo: add more references, e.g. about 20-30 references. Group them into e.g. classical time series modelling, deep learning-based, graph-based methods.
+% Unsupervised anomaly detection in multivariate time series is a difficult task and there are various types of approaches developed in the past years.
+
+% One traditional type is the linear-based model method,\eg, Principal Component Analysis\cite{pca}, a popular data analysis method that reduces the dimension for a huge amount of correlated data and perverse the majority variability information. PCA can perform effectively in the high-correlated linear data but may fail to retrieve the non-linearity relation out of them. Similarly, One-Class SVM\cite{oneclasssvm} is also targeted for high dimension anomaly detection by transforming normal data into another space where the data is separated from the origin. However, its performance can be sensitive to noise, which may happen frequently in real-world multivariate time series. Besides, for distance-based methods, the K-Nearest Neighbor(KNN) \cite{knn} algorithm is a representative method, which uses the average distance to the k nearest neighbors as the anomaly score. But due to the lack of prior knowledge of anomaly types or durations in most cases, the distance-based method may not be a considerable choice. 
+
+% Besides traditional methods, the deep learning unsupervised methods recently have gained a lot of attention for their promising performance in anomaly detection. For example, Auto-Encoder(AE) method\cite{autoencoding} is proposed to use the reconstruction error as an anomaly score. In addition, LSTM Encoder-Decoder\cite{lstmencoder} models time series temporal dependency by LSTM networks. What's more, GAN\cite{li2019mad} is proposed as a framework using LSTMs as generators and discriminators to model time series. These methods have gain promising performance and have better generalization capability than traditional methods. Despite their effectiveness, these methods mainly focus on the temporal dependency modeling and still have limitations to make full use of modeling the latent correlations between pairs of time series data. 
+
+% In this work, we follow the promising success of deep learning-based anomaly detection methods and propose a novel deep learning anomaly detection model based on graph attention networks to focus on the complex relationship in high-dimension time series data.
+
+% In this section, we review previous approaches to detect anomalies, including classical unsupervised approaches, more recent deep learning-based techniques, and graph-based anomaly detection methods. Besides, we introduce graph neural networks and its related approaches.
+
+% In this section, we first review previous general anomaly detection methods. As our method detects anomalies in a time series prediction-based method, we thus briefly introduce the existing multivariate time series forecasting methods, including relevant graph-based methods. Finally, we give a revision on graph neural networks and its variants to tackle specific problems, such as dealing with time-dependent tasks and relationship modelling tasks.
+
+We first review methods for anomaly detection, and methods for multivariate time series data, including graph-based approaches. Since our approach relies on graph neural networks, we summarize related work in this topic as well.
+
+\paragraph{Anomaly Detection} 
+% These approaches can be applied in extensive senarios with appropriate inputs, e.g., treating all sensors' readings at one tick as input to find out the anomaly ticks across time. In general, there are classical approaches and more recent deep learning-based methods.
+
+Anomaly detection aims to detect unusual samples which deviate from the majority of the data. 
+% pick out the anomaly points in a set which contains large amount of normal points and few anomaly points. The related approaches can be applied in extensive scenarios after selecting appropriate representation for the points. For example, we can regard sensors readings for each time tick as a point and find out anomaly points, which are the anomaly time ticks. In general, there are classical approaches and deep learning-based methods.
+% \paragraph{Classical Methods}
+Classical methods include density-based approaches~\cite{breunig2000lof}, linear-model based approaches~\cite{pca}, distance-based methods~\cite{knn}, classification models~\cite{oneclasssvm}, detector ensembles~\cite{featurebagging} and many others. 
+
+More recently, deep learning methods have achieved improvements in anomaly detection in high-dimensional datasets. These include approaches such as autoencoders (AE)~\cite{autoencoding}, which use reconstruction error as an anomaly score, and related variants such as variational autoencoders (VAEs)~\cite{vae}, which develop a probabilistic approach, and autoencoders combining with Gaussian mixture modelling~\cite{dagmm}. 
+
+% ~\\
+% However, as these approaches generally combine multivariate series data into high-dimensional points, modelling the relationships between multivariate series which are different dimensions in a point can be intractable.
+However, our goal is to develop specific approaches for multivariate time series data, explicitly capturing the graph of relationships between sensors.
+
+
+\paragraph{Multivariate Time Series Modelling}  
+% By forecasting expected data for each time tick in multivariate time series, prediction-based models can find out the time ticks whereas the observations are greatly deviated from the predictions, as described in survey~\cite{survey_timeseries}. 
+These approaches generally model the behavior of a multivariate time series based on its past behavior. A comprehensive summary is given in \cite{survey_timeseries}.
+
+
+% Estimation-based models aims to use previous and subsequent observations to identify whether the current data point is abnormal. For example, basic statistics over the overall ticks, e.g., the mean or the median, have been used to obtain any tick's expected value and identify as an anomaly tick whereas the actual value is greatly deviated from the expected value.[2 references for estimations]. For neighbor time ticks are usually more valuable compared to the large overall ticks especially in time-dependent cases, some approaches[2 references emstimation] prefer the statistics over the neighbor ticks rather than the overall ticks.
+
+Classical methods include auto-regressive models~\cite{hautamaki2004outlier} and the auto-regressive integrated moving average (ARIMA) models~\cite{arima_1, arima_2}, based on a linear model given the past values of the series. However, their linearity makes them unable to model complex nonlinear characteristics in time series, which we are interested in.
+
+
+% In contrast to Estimation-based models, Prediction-based models only use past data to forecast the future data and similarly label the points which are greatly deviated from the prediction as anomalies. Since the Prediction-based models do not require any feature data, it indicates that these models do not need to wait for the feature data so that these models have no delay to detect anomalies, which are more considerable for anomaly detection to give a timely alarm. The approaches for Prediction-based model based can be classified into classical methods and deep-learning based methods. The classical methods include auto-regressive models[ref] and the auto-regressive integrated moving average (ARIMA) models[refs]. However, auto-regressive relative models are based on the linear regression and can not model the non-linear characteristic in time series. To represent more complex and high-dimensional time series, the deep-learning based techniques are widely used to model multivariate time series, such as Convolution Neural Network (CNN) based models[ref], Long Short Term Memory (LSTM) models[refs] and Generative Adversarial Networks (GAN) models[ref]. 
+
+% such as Long Short Term Memory (LSTM) model~\cite{lstmencoder} and Generative Adversarial Networks (GAN) are developed in multivariate abnormal detection and gained promising performance.
+
+% \subsubsection{Deep learning-Based Methods}
+To learn representations for nonlinear high-dimensional time series and predict time series data, deep learning-based time series methods have attracted interest. These techniques, such as Convolutional Neural Network (CNN) based models~\cite{cnn_deepant}, Long Short Term Memory (LSTM)~\cite{lstm_1,lstm_2, lstmvae} and Generative Adversarial Networks (GAN) models~\cite{zhou2019beatgan,li2019mad}, have found success in practical time series tasks. However, they do not explicitly learn the relationships between different time series, which are meaningful for anomaly detection: for example, they can be used to diagnose anomalies by identifying deviations from these relationships.
+
+Graph-based methods provide a way to model the relationships between sensors by representing the inter-dependencies with edges. Such methods include probabilistic graphical models, which encode joint probability distributions, as described in~\cite{pgm_1,pgm_2}. However, most existing methods are designed to handle stationary time series, and have difficulty modelling more complex and highly non-stationary time series arising from sensor settings.
+
+
+
+% \paragraph{Graph-Based Anomaly Detection} 
+
+% To capture inter-relationships between sensors, graphs are naturally used to represent the inter-dependencies by the introduction of edges between the related sensors. However, the existing graph-based methods~\cite{graphsurvey} generally aim to detect anomalies in explicit graph structure data, e.g., social networks, financial trading networks and so on. For instance, the structure-based approaches~\cite{akoglu2010oddball,henderson2010metric,ding2012intrusion} exploit the graph structure to find empirical patterns and identify nodes which behave greatly deviated from the patterns as anomalies. In addition, the relational learning based methods~\cite{friedman1999learning,neville2003learning,taskar2012discriminative} use 
+% graphical models, such as probabilistic relational models and Markov models, to exploit the relationships between the related data and assign them into anomalous and normal. However, these approaches generally require explicit graph structure settings and have limitation to represent nonlinear relationship between sensors.
+
+\paragraph{Graph Neural Networks}
+In recent years, graph neural networks (GNNs) have emerged as successful approaches for modelling complex patterns in graph-structured data.
+% \paragraph{Related Methods} 
+In general, GNNs assume that the state of a node is influenced by the states of its neighbors. Graph Convolution Networks (GCNs)~\cite{gcn} model a node's feature representation by aggregating the representations of its one-step neighbors. Building on this approach, graph attention networks (GATs)~\cite{gat} use an attention function to compute different weights for different neighbors during this aggregation. 
+% More variants of GNNs have been developed to tackle different problems.
+Related variants have shown success in time-dependent problems: for example, GNN-based models can perform well in traffic prediction tasks~\cite{traffic_2,traffic_1}. Applications in recommendation systems~\cite{lim2020stp,relationalgcn} and relative applications ~\cite{wang2020detecting} verify the effectiveness of GNN to model large-scale multi-relational data.
+
+However, these approaches use the same model parameters to model the behavior of each node, and hence face limitations in representing very different behaviors of different sensors. Moreover, GNNs typically require the graph structure as an input, whereas the graph structure is initially unknown in our setting, and needs to be learned from data.
+
+
+
+
+% \begin{figure*}[t]
+% \centering
+% \includegraphics[width=0.8\textwidth]{images/framework.png}
+% \caption{Overview of our proposed framework.}
+
+% \label{fig:framework}
+% \end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.5\textwidth]{images/overview_fixed.pdf}
+\caption{Overview of our proposed framework.}
+
+\label{fig:framework}
+\end{figure}
+
+
+\section{Proposed Framework}
+
+\subsection{Problem Statement}
+In this paper, our training data consists of sensor (i.e. multivariate time series) data from $N$ sensors over $\Ttr$ time ticks: the sensor data is denoted $\mathbf{s}_\text{train} = \left[\mathbf{s}^{(1)}_\text{train}, \cdots,\mathbf{s}^{(\Ttr)}_\text{train}\right]$, which is used to train our approach. In each time tick $t$, the sensor values $\mathbf{s}^{(t)}_\text{train} \in \mathbb{R}^N$ form an $N$ dimensional vector representing the values of our $N$ sensors. Following the usual unsupervised anomaly detection formulation, the training data is assumed to consist of only normal data.
+
+Our goal is to detect anomalies in testing data, which comes from the same $N$ sensors but over a separate set of $\Tte$ time ticks: the test data is denoted $\mathbf{s}_\text{test} = \left[\mathbf{s}^{(1)}_\text{test},\cdots,\mathbf{s}^{(\Tte)}_\text{test}\right]$. 
+
+The output of our algorithm is a set of $\Tte$ binary labels indicating whether each test time tick is an anomaly or not, i.e. $\mathsf{a}(t) \in \{0, 1\}$, where $\mathsf{a}(t) = 1$ indicates that time $t$ is anomalous. 
+
+\subsection{Overview}
+Our \textsc{GDN} method aims to learn relationships between sensors as a graph, and then identifies and explains deviations from the learned patterns. It involves four main components: 
+\begin{enumerate}
+    \item \textbf{Sensor Embedding}: uses embedding vectors to capture the unique characteristics of each sensor;
+    \item \textbf{Graph Structure Learning}: learns a graph structure representing dependence relationships between sensors;
+    \item \textbf{Graph Attention-Based Forecasting}: forecasts future values of each sensor based on a graph attention function over its neighbors;
+    \item \textbf{Graph Deviation Scoring}: identifies deviations from the learned relationships, and localizes and explains these deviations.
+\end{enumerate}
+Figure \ref{fig:framework} provides an overview of our framework.
+
+% Based on it, we apply Graph Convolution as a feature extractor to time series input , by encoding spatial dependency between multivariate observations. Besides, we learn embedding for each time series through prediction layer, use them to generate graph structure and incorporate them into attention mechanism in graph aggregation process. Then, we use a square loss to perform end-to-end learning. Finally, we describe our anomaly score mechanism and how we label anomaly events based on our trained model. The overview framework is showed in Figure \ref{fig:framework}.
+
+% \subsection{Representing Time Series in Graph Structure}
+% To model multivariate time series data in a graph-based way, we consider variables in multivariate time series data as nodes in the graph, and the relationships between variables as edges between its nodes. Since the dependency patterns between sensors need not be symmetric, we model relationships between sensors using directed edges, where an edge from one sensor to another indicates that the first sensor is used for modelling the behavior of the second sensor. We use an adjacency matrix $A$ to represent this directed graph, where $A_{ij}$ represents the presence of an edge from node $i$ to node $j$.
+
+
+\subsection{Sensor Embedding}
+In many sensor data settings, different sensors can have very different characteristics, and these characteristics can be related in complex ways. For example, imagine we have two water tanks, each containing a sensor measuring the water level in the tank, and a sensor measuring the water quality in the tank. Then, it is plausible that the two water level sensors would behave similarly, and the two water quality sensors would behave similarly. However, it is equally plausible that sensors within the same tank would exhibit strong correlations. Hence, ideally, we would want to represent each sensor in a flexible way that captures the different `factors' underlying its behavior in a multidimensional way. 
+
+Hence, we do this by introducing an \textbf{embedding vector} for each sensor, representing its characteristics: 
+\begin{align*}
+    \mathbf{v_i} \in \mathbb{R}^d,\text{ for }i \in \{1, 2, \cdots, N\}
+\end{align*}
+These embeddings are initialized randomly and then trained along with the rest of the model.
+
+Similarity between these embeddings $\mathbf{v_i}$ indicates similarity of behaviors: hence, sensors with similar embedding values should have a high tendency to be related to one another. In our model, these embeddings will be used in two ways: 1) for structure learning, to determine which sensors are related to one another, and 2) in our attention mechanism, to perform attention over neighbors in a way that allows heterogeneous effects for different types of sensors.  
+
+\subsection{Graph Structure Learning}
+
+A major goal of our framework is to learn the relationships between sensors in the form of a graph structure. To do this, we will use a \textbf{directed graph}, whose nodes represent sensors, and whose edges represent dependency relationships between them. An edge from one sensor to another indicates that the first sensor is used for modelling the behavior of the second sensor. We use a directed graph because the dependency patterns between sensors need not be symmetric. We use an adjacency matrix $A$ to represent this directed graph, where $A_{ij}$ represents the presence of a directed edge from node $i$ to node $j$.
+
+We design a flexible framework which can be applied either to 1) the usual case where we have no prior information about the graph structure, or 2) the case where we have some prior information about which edges are plausible (e.g. the sensor system may be divided into parts, where sensors in different parts have minimal interaction). 
+
+This prior information can be flexibly represented as a set of \textbf{candidate relations} $\mathcal{C}_i$ for each sensor $i$, i.e. the sensors it could be dependent on:
+\begin{align}
+    \mathcal{C}_i \subseteq \{1, 2, \cdots, N\} \setminus \{i\}
+\end{align}
+In the case without prior information, the candidate relations of sensor $i$ is simply all sensors, other than itself.
+
+% We aim to model multivariate time series data in a graph-based view, but in most cases the time series data would not provide explicit information about the graph structure. A simple way is to assume all variables have more or less relationships with others, which indicates a complete graph, in which each nodes has a link to others. However, it is high cost computation for operating on a complete graph in a large-scale time series dataset and the cost-effective can be low for a complete graph can not provide too much valuable information on it. 
+
+% Hence, we propose employing time series embedding to learn a relatively small graph structure. We assume that each time series embedding represents a feature vector in a same space, such that the similarity between embeddings can reflect the correlated relationship between responding variables. We link the relatively high-correlated nodes(variables) and finally learn a graph structure. The details are illustrated as follows:
+
+To select the dependencies of sensor $i$ among these candidates, we compute the similarity between node $i$'s embedding vector, and the embeddings of its candidates $j \in \mathcal{C}_i$:
+\begin{align}
+    e_{ji}  & = \frac{\mathbf{v_i}^\top \mathbf{v_j}}{\left\|\mathbf{v_i}\right\| \cdot \left\|\mathbf{v_j}\right\|} \text{ for }j \in \mathcal{C}_i\\ 
+    A_{ji}  & = \mathds{1}\{ j \in \mathsf{TopK}(\{e_{ki}: k \in \mathcal{C}_i\}) \}
+\end{align}
+That is, we first compute $e_{ji}$, the normalized dot product between the embedding vectors of sensor $i$, and the candidate relation $j \in \mathcal{C}_i$. Then, we select the top $k$ such normalized dot products: here $\mathsf{TopK}$ denotes the indices of top-$k$ values among its input (i.e. the normalized dot products). The value of $k$ can be chosen by the user according to the desired sparsity level. Next, we will define our graph attention-based model which makes use of this learned adjacency matrix $A$.
+
+
+\subsection{Graph Attention-Based Forecasting}
+
+In order to provide useful explanations for anomalies, we would like our model to tell us:
+\begin{itemize}
+    \item Which sensors are deviating from normal behavior?
+    \item In what ways are they deviating from normal behavior?
+\end{itemize}
+
+To achieve these goals, we use a \textbf{forecasting}-based approach, where we forecast the expected behavior of each sensor at each time based on the past. This allows the user to easily identify the sensors which deviate greatly from their expected behavior. Moreover, the user can compare the expected and observed behavior of each sensor, to understand why the model regards a sensor as anomalous. 
+
+Thus, at time $t$, we define our model input $\mathbf{x}^{(t)} \in \mathbb{R}^{N \times w}$ based on a sliding window of size $w$ over the historical time series data (whether training or testing data): 
+\begin{align}
+    \mathbf{x}^{(t)} := \mathbf{\left[s^{(t-w)}, s^{(t-w+1)},\cdots,s^{(t-1)}\right]} 
+\end{align}
+The target output that our model needs to predict is the sensor data at the current time tick, i.e. $\mathbf{s^{(t)}}$.
+
+% To model multivariate time series data, we aim to use historical data input $\mathbf{x}$  to predict the feature data $\mathbf{y}$, which is time series data at the next time step t, $\mathbf{s^{(t)}}$. 
+
+\paragraph{Feature Extractor}
+To capture the relationships between sensors, we introduce a graph attention-based feature extractor to fuse a node's information with its neighbors based on the learned graph structure. Unlike existing graph attention mechanisms, our feature extractor incorporates the sensor embedding vectors $\mathbf{v}_i$, which characterize the different behaviors of different types of sensors. To do this, we compute node $i$'s aggregated representation $\mathbf{z}_{i}$ as follows:
+\begin{align}
+    \mathbf{z}_{i}^{(t)} &= \mathsf{ReLU} \left( \alpha_{i, i} \mathbf{W} \mathbf{x}_{i}^{(t)}+\sum_{j \in \mathcal{N}(i)} \alpha_{i, j} \mathbf{W} \mathbf{x}_{j}^{(t)} \right),
+\end{align}
+where $\mathbf{x}_{i}^{(t)} \in \mathbb{R}^w $ is node i's input feature, $\mathcal{N}(i) =\{ {j \mid A_{ji} > 0} \}$ is the set of neighbors of node $i$ obtained from the learned adjacency matrix $A$, $\mathbf{W} \in \mathbb{R}^{d \times w}$ is a trainable weight matrix which applies a shared linear transformation to every node, and the attention coefficients $\alpha_{i,j}$ are computed as:
+\begin{align}
+    \mathbf{g}_{i}^{(t)} &= \mathbf{v}_{i} \oplus \mathbf{W} \mathbf{x}_{i}^{(t)} \label{eq:gi}\\
+    \pi\left(i, j\right) &= \mathsf{LeakyReLU} \left(\mathbf{a}^{\top}\left( \mathbf{g}_{i}^{(t)}  \oplus \mathbf{g}_{j}^{(t)} \right)  \right) \\
+    \alpha_{i, j} &= \frac{\exp \left(  \pi\left(i, j\right) \right) }{\sum_{k \in \mathcal{N}(i) \cup\{i\}} \exp \left(  \pi\left(i, k\right) \right)}, \label{eq:softmax}
+\end{align}
+where $\oplus$ denotes concatenation; thus $\mathbf{g}_{i}^{(t)}$ concatenates the sensor embedding $\mathbf{v}_{i}$ and the corresponding transformed feature $\mathbf{W} \mathbf{x}_{i}^{(t)}$, 
+%todo: check these equations
+and $\mathbf{a}$ is a vector of learned coefficients for the attention mechanism. We use $\mathsf{LeakyReLU}$ as the non-linear activation to compute the attention coefficient, and normalize the attention coefficents using the softmax function in Eq. \eqref{eq:softmax}.
+
+\paragraph{Output Layer}
+From the above feature extractor, we obtain representations for all $N$ nodes, namely $\{\mathbf{z}_1^{(t)}, \cdots, \mathbf{z}_N^{(t)}\}$. For each $\mathbf{z}_i^{(t)}$, we element-wise multiply (denoted $\circ$) it with the corresponding time series embedding $\mathbf{v}_i$, and use the results across all nodes as the input of stacked fully-connected layers with output dimensionality $N$, to predict the vector of sensor values at time step $t$, i.e. $\mathbf{s^{(t)}}$:
+\begin{align}
+    \mathbf{\hat{s}^{(t)}} = f_\theta\left(\left[ \mathbf{v}_1 \circ \mathbf{z}_{1}^{(t)}, \cdots, \mathbf{v}_N \circ \mathbf{z}_{N}^{(t)}\right]\right)
+\end{align}
+
+The model's predicted output is denoted as $\mathbf{\hat{s}^{(t)}}$. We use the Mean Squared Error between the predicted output $\mathbf{\hat{s}^{(t)}}$ and the observed data, $\mathbf{s^{(t)}}$, as the loss function for minimization:
+\begin{align}
+    L_{\text{MSE}} = \frac{1}{\Ttr-w}\sum_{t=w+1}^{\Ttr}\left\|\mathbf{\hat{s}^{(t)}} - \mathbf{s^{(t)}}\right\|_{2}^{2}
+\end{align}
+
+\subsection{Graph Deviation Scoring}
+Given the learned relationships, we want to detect and explain anomalies which deviate from these relationships. To do this, our model computes individual anomalousness scores for each sensor, and also combines them into a single anomalousness score for each time tick, thus allowing the user to localize which sensors are anomalous, as we will show in our experiments.
+
+The anomalousness score compares the expected behavior at time $t$ to the observed behavior, computing an error value $\mathsf{Err}$ at time $t$ and sensor $i$:
+\begin{align}
+    \mathsf{Err}_i\left(t\right) &= |\mathbf{s_i^{(t)}} - \mathbf{\hat{s}_i^{(t)}} |
+\end{align}
+As different sensors can have very different characteristics, their deviation values may also have very different scales. To prevent the deviations arising from any one sensor from being overly dominant over the other sensors, we perform a robust normalization of the error values of each sensor:
+\begin{align}
+    a_i\left(t\right) &= \frac{ \mathsf{Err}_i\left(t\right) - \widetilde\mu_i }{\widetilde\sigma_i},
+\end{align}
+where $\widetilde\mu_i$ and ${\widetilde\sigma_i}$ are the median and inter-quartile range (IQR\footnote{IQR is defined as the difference between the 1st and 3rd quartiles of a distribution or set of values, and is a robust measure of the distribution's spread.}) across time ticks of the $\mathsf{Err}_i\left(t\right)$ values respectively. We use median and IQR instead of mean and standard deviation as they are more robust against anomalies. 
+
+Then, to compute the overall anomalousness at time tick $t$, we aggregate over sensors using the max function (we use max as it is plausible for anomalies to affect only a small subset of sensors, or even a single sensor) :
+\begin{align}
+    A\left(t\right) &= \max_{i}a_i\left(t\right)
+\end{align}
+
+To dampen abrupt changes in values are often not perfectly predicted and result in sharp spikes in error values even when this behavior is normal, similar with ~\cite{hundman2018detecting}, we use a simple moving average(SMA) to generate the smoothed scores $A_{s}\left(t\right)$.
+
+Finally, a time tick $t$ is labelled as an anomaly if $A_{s}(t)$ exceeds a fixed threshold. While different approaches could be employed to set the threshold such as extreme value theory~\cite{siffer2017anomaly}, to avoid introducing additional hyperparameters, we use in our experiments a simple approach of setting the threshold as the max of $A_{s}(t)$ over the validation data. 
+
+% In general, the overall anomaly scores $A\left(t\right)$ can be used to determine whether the overall system behave anomaly at a certain moment, and the anomaly scores $a_i\left(t\right)$ for every variable can allow us to provide further information about the anomaly. For example, finding out the variables with top-k anomaly scores at an anomaly time step can help us deduce the causes of the detected anomaly.
+
+\section{Experiments}
+In this section, we conduct experiments to answer the following research questions:
+\begin{itemize}
+    \item \textbf{RQ1 (Accuracy):} Does our method outperform baseline methods in accuracy of anomaly detection in multivariate time series, based on ground truth labelled anomalies?
+    \item \textbf{RQ2 (Ablation):} How do the various components of the method contribute to its performance?
+    \item \textbf{RQ3 (Interpretability of Model):} How can we understand our model based on its embeddings and its learned graph structure?
+    \item \textbf{RQ4 (Localizing Anomalies):} Can our method localize anomalies and help users to identify the affected sensors, as well as to understand how the anomaly deviates from the expected behavior?
+\end{itemize}
+
+
+
+\subsection{Datasets}
+As real-world datasets with labeled ground-truth anomalies are scarce, especially for large-scale plants and factories, we use two sensor datasets based on water treatment physical test-bed systems: \texttt{SWaT} and \texttt{WADI}, where operators have simulated attack scenarios of real-world water treatment plants, recording these as the ground truth anomalies.
+
+The Secure Water Treatment (\texttt{SWaT}) dataset comes from a water treatment test-bed coordinated by Singapore's Public Utility Board~\cite{dataset_swat}. It represents a small-scale version of a realistic modern Cyber-Physical system, integrating digital and physical elements to control and monitor system behaviors. As an extension of \texttt{SWaT}, Water Distribution (\texttt{WADI}) is a distribution system comprising a larger number of water distribution pipelines~\cite{dataset_wadi}. Thus \texttt{WADI} forms a more complete and realistic water treatment, storage and distribution network. The datasets contain two weeks of data from normal operations, which are used as training data for the respective models. A number of controlled, physical attacks are conducted at different intervals in the following days, which correspond to the anomalies in the test set.
+
+Table \ref{table:dataset} summarises the statistics of the two datasets. In order to speed up training, the original data samples are down-sampled to one measurement every $10$ seconds by taking the median values. The resulting label is the most common label during the $10$ seconds. Since the systems took 5-6 hours to reach stabilization when first turned on  ~\cite{goh2016dataset}, we eliminate the first 2160 samples for both datasets.
+% Since the data in two datasets are recorded every second. As a result, for \texttt{SWaT}, we obtain 49678 training samples and 44991 test samples. For \texttt{WADI}, we have 104857 training samples and 17280 samples instead. 
+\begin{table}[t]
+    \centering
+    \begin{tabular}{ cccccc } 
+     \toprule
+        \textbf{Datasets} & \textbf{\#Features} & \textbf{\#Train} & \textbf{\#Test} & \textbf{Anomalies} \\
+     \midrule
+        \texttt{SWaT} & 51 & 47515 & 44986 & 11.97\% \\
+        \texttt{WADI} & 127 & 118795 & 17275 & 5.99\% \\
+     \bottomrule
+    \end{tabular}
+    \caption{Statistics of the two datasets used in experiments}
+    \label{table:dataset}
+\end{table}
+\subsection{Baselines}
+We compare the performance of our proposed method with five popular anomaly detection methods, including:
+\begin{itemize}
+%todo: add citations for each method - Done
+    \item \textbf{\textsc{PCA:}}  Principal Component Analysis ~\cite{pca} finds a low-dimensional projection that captures most of the variance in the data. The anomaly score is the reconstruction error of this projection.
+    \item \textbf{\textsc{KNN:} } K Nearest Neighbors uses each point's distance to its $k$th nearest neighbor as an anomaly score~\cite{knn}.
+    \item \textbf{\textsc{FB:}} A Feature Bagging detector is a meta-estimator that fits a number of detectors on various sub-samples of the dataset, then aggregates their scores~\cite{featurebagging}.
+    \item \textbf{\textsc{AE:}} Autoencoders consist of an encoder and decoder which reconstruct data samples ~\cite{autoencoding}. It uses the reconstruction error as the anomaly score.
+    \item \textbf{\textsc{DAGMM:}} Deep Autoencoding Gaussian Model joints deep Autoencoders and Gaussian Mixture Model to generate a low-dimensional representation and reconstruction error for each observation~\cite{dagmm}.
+    \item \textbf{\textsc{LSTM-VAE:}} LSTM-VAE~\cite{lstmvae} replaces the feed-forward network in a VAE with LSTM to combine LSTM and VAE. It can measure reconstruction error with the anomaly score.
+    \item \textbf{\textsc{MAD-GAN:}} A GAN model is trained on normal data, and the LSTM-RNN discriminator along with a reconstruction-based approach is used to compute anomaly scores for each sample~\cite{li2019mad}.
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+We use precision ($\mathsf{Prec}$), recall ($\mathsf{Rec}$) and F1-Score ($\mathsf{F1}$) over the test dataset and its ground truth values to evaluate the performance of our method and baseline models: $\mathsf{F1}=\frac{2 \times \mathsf{Prec} \times \mathsf{Rec}}{\mathsf{Prec} + \mathsf{Rec}}$, where $\mathsf{Prec}=\frac{\mathsf{TP}}{\mathsf{TP}+\mathsf{FP}}$ and $\mathsf{Rec}=\frac{\mathsf{TP}}{\mathsf{TP}+\mathsf{FN}}$, and $\mathsf{TP}, \mathsf{TN}, \mathsf{FP}, \mathsf{FN}$ are the numbers of true positives, true negatives, false positives, and false negatives. Note that our datasets are unbalanced, which justifies the choice of these metrics, which are suitable for unbalanced data. To detect anomalies, we use the maximum anomaly score over the validation dataset to set the threshold. 
+%todo: over the training or validation data? (If validation, change the info in the methods section)
+At test time, any time step with an anomaly score over the threshold will be regarded as an anomaly. 
+
+\subsection{Experimental Setup}
+We implement our method and its variants in PyTorch~\cite{paszke2017automatic} version 1.5.1 with CUDA 10.2 and PyTorch Geometric Library~\cite{Fey/Lenssen/2019} version 1.5.0, 
+and train them on a server with Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz and 4 NVIDIA RTX 2080Ti graphics cards. The models are trained using the Adam optimizer with learning rate $ 1 \times 10^{-3} $ and $ (\beta_1, \beta_2)=(0.9,0.99) $. We train models for up to $50$ epochs and use early stopping with patience of $10$. We use embedding vectors with length of $128(64)$, $k$ with $30(15)$ and hidden layers of $128 (64)$ neurons for the \texttt{WADI} (\texttt{SWaT}) dataset, corresponding to their difference in input dimensionality. We set the sliding window size $w$ as $5$ for both datasets.
+
+\begin{table}[t]
+    \centering\fontsize{9}{11}\selectfont
+    % \resizebox{\textwidth}{!}{
+    \begin{tabular}{rrrrrrr}
+        \toprule
+          & \multicolumn{3}{c}{\textbf{\texttt{SWaT}}} & \multicolumn{3}{c}{\textbf{\texttt{WADI}}} \\
+         \cmidrule(r){2-4} \cmidrule(r){5-7}
+         \textbf{Method} & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ \\
+         \midrule
+         \textsc{PCA} & 24.92 & 21.63 & 0.23 & 39.53 & 5.63 & 0.10 \\
+         \textsc{KNN} & 7.83 & 7.83 & 0.08 & 7.76 & 7.75 & 0.08 \\
+         \textsc{FB}  & 10.17 & 10.17 & 0.10 & 8.60 & 8.60 & 0.09 \\
+         \textsc{AE} & 72.63 & 52.63 & 0.61 & 34.35 & 34.35 & 0.34 \\
+         \textsc{\footnotesize{DAGMM}} & 27.46 & 69.52 & 0.39 & 54.44 & 26.99 & 0.36 \\
+         \textsc{\footnotesize{LSTM-VAE}} & 96.24 & 59.91 & 0.74 & 87.79 & 14.45 & 0.25 \\
+         \textsc{\footnotesize{MAD-GAN}} & 98.97 & 63.74 & 0.77 & 41.44 & 33.92 & 0.37 \\
+         \midrule
+         \textsc{GDN} & \textbf{99.35} & \textbf{68.12} & \textbf{0.81} &\textbf{97.50} & \textbf{40.19} & \textbf{0.57} \\
+         \bottomrule
+    \end{tabular}%}
+    \caption{Anomaly detection accuracy in terms of precision(\%), recall(\%), and F1-score, on two datasets with ground-truth labelled anomalies. Part of the results are from ~\cite{li2019mad}.}
+    \label{tab:performance}
+\end{table}
+
+\subsection{RQ1. Accuracy}
+In Table \ref{tab:performance}, we show the anomaly detection accuracy in terms of precision, recall and F1-score, of our \textsc{GDN} method and the baselines, on the \texttt{SWaT} and \texttt{WADI} datasets. The results show that \textsc{GDN} outperforms the baselines in both datasets, with high precision in both datasets of $0.99$ on \texttt{SWaT} and $0.98$ on \texttt{WADI}. In terms of F-measure, \textsc{GDN} outperforms the baselines on \texttt{SWaT}; on \texttt{WADI}, it has $54\%$ higher F-measure than the next best baseline. \texttt{WADI} is more unbalanced than \texttt{SWaT} and has higher dimensionality than \texttt{SWaT} as shown in Table \ref{table:dataset}. Thus, our method shows effectiveness even in unbalanced and high-dimensional attack scenarios, which are of high importance in real-world applications.
+
+% \begin{table}[t]
+%     \centering
+%     \begin{tabular}{rcccccc}
+%         \toprule
+%           & \multicolumn{3}{c}{\textbf{\texttt{SWaT}}} & \multicolumn{3}{c}{\textbf{\texttt{WADI}}} \\
+%          \cmidrule(r){2-4} \cmidrule(r){5-7}
+%          \textbf{Method} & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ \\
+%          \midrule
+%          \textsc{PCA} & 0.25 & 0.22 & 0.23 & 0.39 & 0.05 & 0.10 \\
+%          \textsc{KNN} & 0.07 & 0.07 & 0.08 & 0.08 & 0.08 & 0.08 \\
+%          \textsc{FB}  & 0.10 & 0.10 & 0.10 & 0.09 & 0.09 & 0.09 \\
+%          \textsc{AE} & 0.73 & 0.53 & 0.61 & 0.34 & 0.34 & 0.34 \\
+%          \textsc{MAD-GAN} & 0.99 & 0.64 & 0.77 & 0.41 & 0.34 & 0.37 \\
+%          \midrule
+%          \textsc{GDN} & \textbf{0.99} & \textbf{0.70} & \textbf{0.82} &\textbf{0.94} & \textbf{0.42} & \textbf{0.58} \\
+%          \bottomrule
+%     \end{tabular}
+%     \caption{Anomaly detection accuracy in terms of precision, recall, and F1-score, on two datasets with ground-truth labelled anomalies.}
+%     \label{tab:performance}
+% \end{table}
+
+% more specific one
+
+
+\subsection{RQ2. Ablation}
+To study the necessity of each component of our method, we gradually exclude the components to observe how the model performance degrades. First, we study the importance of the learned graph by substituting it with a static complete graph, where each node is linked to all the other nodes. Second, to study the importance of the sensor embeddings, we use an attention mechanism without sensor embeddings: that is, $\mathbf{g}_{i} = \mathbf{W} \mathbf{x}_{i}$ in Eq. \eqref{eq:gi}. Finally, we disable the attention mechanism, instead aggregating using equal weights assigned to all neighbors. The results are summarized in Table \ref{tab:ablation} and provide the following findings:
+
+\begin{itemize}
+    \item Replacing the learned graph structure with a complete graph degrades performance in both datasets. The effect on the \texttt{WADI} dataset is more obvious. This indicates that the graph structure learner enhances performance, especially for large-scale datasets.
+    \item The variant which removes the sensor embedding from the attention mechanism underperforms the original model in both datasets. This implies that the embedding feature improves the learning of weight coefficients in the graph attention mechanism.
+    \item Removing the attention mechanism degrades the model's performance most in our experiments. Since sensors have very different behaviors, treating all neighbors equally introduces noise and misleads the model. This verifies the importance of the graph attention mechanism.
+\end{itemize}
+These findings suggest that \textsc{GDN}'s use of a learned graph structure, sensor embedding, and attention mechanisms all contribute to its accuracy, which provides an explanation for its better performance over the baseline methods.
+
+% \begin{table}[t]
+%     \centering
+%     \begin{tabular}{lcccccc}
+%         \toprule
+%           & \multicolumn{3}{c}{\textbf{\texttt{SWaT}}} & \multicolumn{3}{c}{\textbf{\texttt{WADI}}} \\
+%          \cmidrule(r){2-4} \cmidrule(r){5-7}
+%          \textbf{Method} & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ \\
+%          \midrule
+%          \textsc{GDN} & \textbf{0.99} & \textbf{0.70} & \textbf{0.82} & \textbf{0.94} & \textbf{0.42} & \textbf{0.58} \\
+%          \midrule
+%          - \textsc{TopK} & 0.97 & 0.65 & 0.78 & 0.92 & 0.35 & 0.51 \\
+%          \ \ \ - \textsc{Emb} & 0.92 & 0.61 & 0.76 & 0.92 & 0.33 & 0.49 \\
+%          \ \ \ \ \ \ - \textsc{Att} & 0.71 & 0.65 & 0.68 & 0.61 & 0.39 & 0.48 \\
+%          \bottomrule
+%     \end{tabular}
+%     \caption{Anomaly detection accuracy of \textsc{GDN} variants.}
+%     \label{tab:ablation}
+% \end{table}
+
+\begin{table}[t]
+    \centering
+    \scalebox{0.9}{
+    \begin{tabular}{lrrrrrr}
+        \toprule
+          & \multicolumn{3}{c}{\textbf{\texttt{SWaT}}} & \multicolumn{3}{c}{\textbf{\texttt{WADI}}} \\
+         \cmidrule(r){2-4} \cmidrule(r){5-7}
+         \textbf{Method} & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ & $\mathbf{\mathsf{Prec}}$ & $\mathbf{\mathsf{Rec}}$ & $\mathbf{\mathsf{F1}}$ \\
+         \midrule
+         \textsc{GDN} & \textbf{99.35} & \textbf{68.12} & \textbf{0.81} &\textbf{97.50} & \textbf{40.19} & \textbf{0.57} \\
+         \midrule
+         - \textsc{TopK} & 97.41 & 64.70 & 0.78 & 92.21 & 35.12 & 0.51 \\
+         \ \ \ - \textsc{Emb} & 92.31 & 61.25 & 0.76 & 91.86 & 33.49 & 0.49 \\
+         \ \ \ \ \ \ - \textsc{Att} & 71.05 & 65.06 & 0.68 & 61.33 & 38.85 & 0.48 \\
+         \bottomrule
+    \end{tabular}}
+    \caption{Anomaly detection accuracy in term of percision({\%}), recall({\%}), and F1-score of \textsc{GDN} and its variants.}
+    \label{tab:ablation}
+\end{table}
+
+
+
+
+\begin{figure}[t]
+\centering
+\scalebox{0.9}{
+\includegraphics[width=7cm]{images/embedding.pdf}}
+\caption{A t-SNE plot of the sensor embeddings of our trained model on the \texttt{WADI} dataset. Node colors denote classes. Specifically, the dashed circled region shows localized clustering of 2\_FIC\_x01\_CO sensors. These sensors are measuring similar indicators in \texttt{WADI}. 
+%todo: are these not the t-SNE of the embeddings?
+% Yes. these are the t-SNE of the embeddgins. That was the description before, changed now. 
+}
+\label{fig:feature_tsne}
+\end{figure}
+
+\begin{figure*}
+\centering
+\scalebox{0.85}{
+\includegraphics[width=\textwidth]{images/localize.pdf}}
+\caption{\emph{Left:} Force-directed graph layout with attention weights as edge weights, showing an attack in \texttt{WADI}. The red triangle denotes the central sensor identified by our approach, with highest anomaly score. Red circles indicate nodes with edge weights larger than $0.1$ to the central node. \emph{Right:} Comparing expected and observed data helps to explain the anomaly. The attack period is shaded in red.}
+\label{fig:local}
+\end{figure*}
+
+\subsection{RQ3. Interpretability of Model}
+\paragraph{Interpretability via Sensor Embeddings} To explain the learned model, we can visualize its sensor embedding vectors, e.g. using t-SNE\cite{tsne}, shown on the \texttt{WADI} dataset in Figure \ref{fig:feature_tsne}. Similarity in this embedding space indicate similarity between the sensors' behaviors, so inspecting this plot allows the user to deduce groups of sensors which behave in similar ways. 
+
+To validate this, we color the nodes using $7$ colors corresponding to $7$ classes of sensors in \texttt{WADI} systems. The representation exhibits localized clustering in the projected 2D space, which verifies the effectiveness of the learned feature representations to reflect the localized sensors' behavior similarity. Moreover, we observe a group of sensors forming a localized cluster, shown in the dashed circled region. Inspecting the data, we find that these sensors measure similar indicators in water tanks that perform similar functions in the \texttt{WADI} water distribution network, explaining the similarity between these sensors.
+\paragraph{Interpretability via Graph Edges and Attention Weights} Edges in our learned graph provide interpretability by indicating which sensors are related to one another. Moreover, the attention weights further indicate the importance of each of a node's neighbors in modelling the node's behavior. Figure \ref{fig:local} (left) shows an example of this learned graph on the \texttt{WADI} dataset. The following subsection further shows a case study of using this graph to localize and understand an anomaly. 
+
+\subsection{RQ4. Localizing Anomalies}
+How well can our model help users to localize and understand an anomaly? Figure \ref{fig:local} (left) shows the learned graph of sensors, with edges weighted by their attention weights, and plotted using a force-directed layout\cite{kobourov2012spring}. 
+
+We conduct a case study involving an anomaly with a known cause: as recorded in the documentation of the \texttt{WADI} dataset, this anomaly arises from a flow sensor, \emph{1\_FIT\_001\_PV}, being attacked via false readings. These false readings are within the normal range of this sensor, so detecting this anomaly is nontrivial.
+
+During this attack period, \textsc{GDN} identifies \emph{1\_MV\_001\_STATUS} as the deviating sensor with the highest anomaly score, as indicated by the red triangle in Figure \ref{fig:local} (left). The large deviation at this sensor indicates that \emph{1\_MV\_001\_STATUS} could be the attacked sensor, or closely related to the attacked sensor.
+
+% As shown in Figure \ref{fig:local} (left), the deviated sensor in the case is indicated by the red triangle. 
+
+\textsc{GDN} indicates (in red circles) the sensors with highest attention weights to the deviating sensor. Indeed, these neighbors are closely related sensors: the \emph{1\_FIT\_001\_PV} neighbor is normally highly correlated with \emph{1\_MV\_001\_STATUS}, as the latter shows the valve status for a valve which controls the flow measured by the former. However, the attack caused a deviation from this relationship, as the attack gave false readings only to \emph{1\_FIT\_001\_PV}. \textsc{GDN} further allows understanding of this anomaly by comparing the predicted and observed sensor values in Figure \ref{fig:local} (right): for \emph{1\_MV\_001\_STATUS}, our model predicted an increase (as \emph{1\_FIT\_001\_PV} increased, and our model has learned that the sensors increase together). Due to the attack, however, no change was observed in \emph{1\_MV\_001\_STATUS}, leading to a large error which was detected as an anomaly by \textsc{GDN}. 
+
+In summary: 1) our model's individual anomaly scores help to localize anomalies; 2) its attention weights help to find closely related sensors; 3) its predictions of expected behavior of each sensor allows us to understand how anomalies deviate from expectations.
+
+% In this case, the attacker makes false readings to sensor \emph{1\_FIT\_001\_PV} to trick the system into regarding there is flow through this sensor but actually there is no flow through it. As the valve actuator \emph{1\_MV\_001\_STATUS} is a key controller for \emph{1\_FIT\_001\_PV}, false readings to \emph{1\_FIT\_001\_PV}
+% correspondingly cause \emph{1\_MV\_001\_STATUS} reflecting turning on in our model, but in reality the valve is off.
+
+
+\section{Conclusion}
+In this work, we proposed our Graph Deviation Network (\textsc{GDN}) approach, which learns a graph of relationships between sensors, and detects deviations from these patterns, while incorporating sensor embeddings. Experiments on two real-world sensor datasets showed that \textsc{GDN} outperformed baselines in accuracy, provides an interpretable model, and helps users to localize and understand anomalies. Future work can consider additional architectures and online training methods, to further improve the practicality of the approach.
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=8cm]{images/localization_7.png}
+% \caption{A forced direct graph with attention weights as edge weights. The red node denotes if this node has been attacked. The high correlated nodes(with high attention weights) and their edges are marked light red. The plot shows a specific case when \emph{1\_FIT\_001\_PV} has been attacked in \texttt{WADI}.}
+% \label{fig:local}
+% \end{figure}
+
+\section*{Acknowledgments}
+This work was supported in part by NUS ODPRT Grant R252-000-A81-133. The datasets are provided by iTrust, Centre for Research in Cyber Security, Singapore University of Technology and Design.
+
+\bibliography{reference}
+ 
+\end{document}

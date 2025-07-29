@@ -18,7 +18,7 @@ from util.preprocess import *
 
 
 
-def test(model, dataloader):
+def test(model, dataloader, verbose=False):
     # test
     loss_func = nn.MSELoss(reduction='mean')
     device = get_device()
@@ -40,15 +40,17 @@ def test(model, dataloader):
 
     i = 0
     acu_loss = 0
+    
+    if verbose:
+        print(f"Testing model on {test_len} batches...")
+    
     for x, y, labels, edge_index in dataloader:
         x, y, labels, edge_index = [item.to(device).float() for item in [x, y, labels, edge_index]]
         
         with torch.no_grad():
             predicted = model(x, edge_index).float().to(device)
             
-            
             loss = loss_func(predicted, y)
-            
 
             labels = labels.unsqueeze(1).repeat(1, predicted.shape[1])
 
@@ -66,15 +68,24 @@ def test(model, dataloader):
         
         i += 1
 
-        if i % 10000 == 1 and i > 1:
+        if verbose and i % 100 == 0:
+            elapsed = time.time() - now
+            progress = i / test_len * 100
+            print(f"  Progress: {progress:.1f}% ({i}/{test_len}), Avg Loss: {acu_loss/i:.6f}, Time: {elapsed:.1f}s")
+        elif i % 10000 == 1 and i > 1:
             print(timeSincePlus(now, i / test_len))
-
 
     test_predicted_list = t_test_predicted_list.tolist()        
     test_ground_list = t_test_ground_list.tolist()        
     test_labels_list = t_test_labels_list.tolist()      
     
     avg_loss = sum(test_loss_list)/len(test_loss_list)
+    
+    if verbose:
+        total_time = time.time() - now
+        print(f"Testing completed in {total_time:.1f}s")
+        print(f"Average test loss: {avg_loss:.6f}")
+        print(f"Processed {len(test_predicted_list)} samples")
 
     return avg_loss, [test_predicted_list, test_ground_list, test_labels_list]
 

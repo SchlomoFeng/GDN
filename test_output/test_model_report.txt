@@ -1,0 +1,39 @@
+======================================================================
+GDN MODEL ANALYSIS REPORT
+======================================================================
+
+MODEL ARCHITECTURE
+--------------------------------------------------
+Model Type: MockGDNModel
+Total Parameters: 177
+Trainable Parameters: 177
+Number of Sensors: 10
+Embedding Dimension: 16
+Top-K Connections: 5
+Number of GNN Layers: 0
+
+LEARNED GRAPH STRUCTURE
+--------------------------------------------------
+Graph Density: 0.0662
+Average Degree: 0.66
+Number of Components: 1
+Clustering Coefficient: 0.6767
+Hub Sensors (top 3): sensor_02, sensor_07, sensor_06
+
+SENSOR EMBEDDINGS
+--------------------------------------------------
+Embedding Dimension: 16
+Average Norm: 4.465
+Norm Range: [3.275, 5.148]
+Diversity Score: 6.397
+Number of Clusters: 5
+Most Similar Pair: sensor_00 - sensor_02 (similarity: 0.675)
+
+KEY INSIGHTS
+--------------------------------------------------
+• Model is relatively lightweight with <10K parameters
+• High clustering coefficient indicates modular sensor groups
+• High embedding diversity suggests well-separated sensor representations
+• Many clusters detected, indicating diverse sensor behaviors
+
+======================================================================

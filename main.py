@@ -14,12 +14,16 @@ from util.iostream import printsep
 
 from datasets.TimeDataset import TimeDataset
 
-
 from models.GDN import GDN
 
 from train import train
 from test  import test
 from evaluate import get_err_scores, get_best_performance_data, get_val_performance_data, get_full_err_scores
+
+# Enhanced analysis and visualization components
+from anomaly_localizer import AnomalyLocalizer
+from gdn_visualizer import GDNVisualizer
+from model_analyzer import ModelAnalyzer
 
 import sys
 from datetime import datetime
@@ -39,6 +43,12 @@ class Main():
         self.train_config = train_config
         self.env_config = env_config
         self.datestr = None
+        
+        # Enhanced configuration
+        self.verbose = env_config.get('verbose', False)
+        self.enable_visualization = env_config.get('enable_visualization', False)
+        self.enable_localization = env_config.get('enable_localization', False)
+        self.top_k_sensors = env_config.get('top_k_sensors', 5)
 
         dataset = self.env_config['dataset'] 
         train_orig = pd.read_csv(f'./data/{dataset}/train.csv', sep=',', index_col=0)
@@ -63,7 +73,6 @@ class Main():
         train_dataset_indata = construct_data(train, feature_map, labels=0)
         test_dataset_indata = construct_data(test, feature_map, labels=test.attack.tolist())
 
-
         cfg = {
             'slide_win': train_config['slide_win'],
             'slide_stride': train_config['slide_stride'],
@@ -72,18 +81,15 @@ class Main():
         train_dataset = TimeDataset(train_dataset_indata, fc_edge_index, mode='train', config=cfg)
         test_dataset = TimeDataset(test_dataset_indata, fc_edge_index, mode='test', config=cfg)
 
-
         train_dataloader, val_dataloader = self.get_loaders(train_dataset, train_config['seed'], train_config['batch'], val_ratio = train_config['val_ratio'])
 
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
 
-
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.test_dataloader = DataLoader(test_dataset, batch_size=train_config['batch'],
                             shuffle=False, num_workers=0)
-
 
         edge_index_sets = []
         edge_index_sets.append(fc_edge_index)
@@ -95,6 +101,45 @@ class Main():
                 out_layer_inter_dim=train_config['out_layer_inter_dim'],
                 topk=train_config['topk']
             ).to(self.device)
+        
+        # Initialize enhanced analysis components
+        self.anomaly_localizer = None
+        self.visualizer = None
+        self.model_analyzer = None
+        
+        if self.enable_localization or self.verbose:
+            self.anomaly_localizer = AnomalyLocalizer(feature_map, verbose=self.verbose)
+            
+        if self.enable_visualization or self.verbose:
+            self.visualizer = GDNVisualizer(
+                output_dir=f'./visualizations/{dataset}_{self.get_datestr()}',
+                feature_map=feature_map,
+                verbose=self.verbose
+            )
+            
+        if self.verbose:
+            self.model_analyzer = ModelAnalyzer(
+                self.model, 
+                feature_map, 
+                device=str(self.device),
+                verbose=self.verbose
+            )
+            
+        if self.verbose:
+            print(f"GDN Enhanced Analysis Initialized:")
+            print(f"  Dataset: {dataset}")
+            print(f"  Sensors: {len(feature_map)}")
+            print(f"  Verbose mode: {self.verbose}")
+            print(f"  Visualization: {self.enable_visualization}")
+            print(f"  Localization: {self.enable_localization}")
+            print(f"  Device: {self.device}")
+            print(f"  Model parameters: {sum(p.numel() for p in self.model.parameters()):,}")
+
+    def get_datestr(self):
+        if self.datestr is None:
+            now = datetime.now()
+            self.datestr = now.strftime('%m|%d-%H:%M:%S')
+        return self.datestr
 
 
 
@@ -105,8 +150,15 @@ class Main():
         else:
             model_save_path = self.get_save_path()[0]
 
+            # Enhanced training configuration
+            enhanced_train_config = train_config.copy()
+            enhanced_train_config.update({
+                'verbose': self.verbose,
+                'enable_visualization': self.enable_visualization
+            })
+
             self.train_log = train(self.model, model_save_path, 
-                config = train_config,
+                config = enhanced_train_config,
                 train_dataloader=self.train_dataloader,
                 val_dataloader=self.val_dataloader, 
                 feature_map=self.feature_map,
@@ -120,8 +172,11 @@ class Main():
         self.model.load_state_dict(torch.load(model_save_path))
         best_model = self.model.to(self.device)
 
-        _, self.test_result = test(best_model, self.test_dataloader)
-        _, self.val_result = test(best_model, self.val_dataloader)
+        if self.verbose:
+            print("Running final evaluation on test and validation sets...")
+        
+        _, self.test_result = test(best_model, self.test_dataloader, verbose=self.verbose)
+        _, self.val_result = test(best_model, self.val_dataloader, verbose=self.verbose)
 
         self.get_score(self.test_result, self.val_result)
 
@@ -160,7 +215,6 @@ class Main():
         top1_best_info = get_best_performance_data(test_scores, test_labels, topk=1) 
         top1_val_info = get_val_performance_data(test_scores, normal_scores, test_labels, topk=1)
 
-
         print('=========================** Result **============================\n')
 
         info = None
@@ -172,6 +226,80 @@ class Main():
         print(f'F1 score: {info[0]}')
         print(f'precision: {info[1]}')
         print(f'recall: {info[2]}\n')
+        
+        # Enhanced analysis if enabled
+        if self.enable_localization and self.anomaly_localizer:
+            if self.verbose:
+                print("Performing detailed anomaly localization analysis...")
+            
+            # Compute sensor-level anomaly scores
+            sensor_scores = self.anomaly_localizer.compute_sensor_anomaly_scores(test_result, val_result)
+            
+            # Generate comprehensive analysis
+            summary_report = self.anomaly_localizer.generate_summary_report(
+                sensor_scores, test_labels, k=self.top_k_sensors
+            )
+            
+            print("=" * 60)
+            print(summary_report)
+            
+            # Save detailed results
+            results_path = self.get_save_path()[1].replace('.csv', '_detailed.csv')
+            self.anomaly_localizer.save_detailed_results(results_path, sensor_scores, test_labels)
+            
+        # Enhanced visualization if enabled
+        if self.enable_visualization and self.visualizer:
+            if self.verbose:
+                print("Generating visualizations...")
+                
+            # Prepare data for visualization
+            test_data = {
+                'sensor_scores': test_scores,  # This is from get_full_err_scores
+                'labels': test_labels
+            }
+            
+            # Create visualizations
+            self.visualizer.plot_anomaly_timeline(test_scores, test_labels, top_k=self.top_k_sensors)
+            self.visualizer.create_anomaly_dashboard(test_scores, test_labels)
+            self.visualizer.create_interactive_dashboard(test_scores, test_labels)
+        
+        # Model analysis if verbose mode
+        if self.verbose and self.model_analyzer:
+            print("Generating model analysis report...")
+            
+            # Analyze model components
+            self.model_analyzer.analyze_graph_structure()
+            self.model_analyzer.analyze_sensor_embeddings()
+            
+            # Generate and save report
+            report_path = f'./results/{self.env_config["dataset"]}_{self.get_datestr()}_model_report.txt'
+            os.makedirs(os.path.dirname(report_path), exist_ok=True)
+            report = self.model_analyzer.generate_model_report(report_path)
+            
+            if self.verbose:
+                print("\n" + "="*60)
+                print("MODEL ANALYSIS SUMMARY")
+                print("="*60)
+                print(report[:1000] + "..." if len(report) > 1000 else report)
+                print(f"Full report saved to: {report_path}")
+                
+        # Enhanced metrics output
+        if self.verbose:
+            print("\n" + "="*60)
+            print("ENHANCED METRICS SUMMARY")
+            print("="*60)
+            print(f"Dataset: {self.env_config['dataset']}")
+            print(f"Test samples: {len(test_labels)}")
+            print(f"Anomalous samples: {sum(test_labels)}")
+            print(f"Normal samples: {len(test_labels) - sum(test_labels)}")
+            print(f"Anomaly rate: {sum(test_labels)/len(test_labels)*100:.2f}%")
+            print(f"Feature dimensions: {feature_num}")
+            print(f"F1 Score: {info[0]:.4f}")
+            print(f"Precision: {info[1]:.4f}")
+            print(f"Recall: {info[2]:.4f}")
+            if len(info) > 3:
+                print(f"AUC: {info[3]:.4f}")
+            print("="*60)
 
 
     def get_save_path(self, feature_name=''):
@@ -215,6 +343,10 @@ if __name__ == "__main__":
     parser.add_argument('-topk', help='topk num', type = int, default=20)
     parser.add_argument('-report', help='best / val', type = str, default='best')
     parser.add_argument('-load_model_path', help='trained model path', type = str, default='')
+    parser.add_argument('-verbose', help='enable detailed output and visualizations', action='store_true', default=False)
+    parser.add_argument('-enable_visualization', help='enable visualization generation', action='store_true', default=False)
+    parser.add_argument('-enable_localization', help='enable anomaly localization analysis', action='store_true', default=False)
+    parser.add_argument('-top_k_sensors', help='number of top sensors to analyze', type=int, default=5)
 
     args = parser.parse_args()
 
@@ -248,7 +380,11 @@ if __name__ == "__main__":
         'dataset': args.dataset,
         'report': args.report,
         'device': args.device,
-        'load_model_path': args.load_model_path
+        'load_model_path': args.load_model_path,
+        'verbose': args.verbose,
+        'enable_visualization': args.enable_visualization,
+        'enable_localization': args.enable_localization,
+        'top_k_sensors': args.top_k_sensors
     }
     
 

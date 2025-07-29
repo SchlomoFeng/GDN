@@ -120,8 +120,23 @@ class Main():
         self.model.load_state_dict(torch.load(model_save_path))
         best_model = self.model.to(self.device)
 
-        _, self.test_result = test(best_model, self.test_dataloader)
-        _, self.val_result = test(best_model, self.val_dataloader)
+        # Get feature names for enhanced analysis
+        feature_names = list(self.feature_map.keys()) if self.feature_map else None
+        experiment_name = f"{self.env_config['dataset']}_seed{self.train_config['seed']}"
+        
+        print("\n" + "="*60)
+        print("Starting enhanced testing with detailed anomaly analysis...")
+        print("="*60)
+
+        _, self.test_result = test(best_model, self.test_dataloader, 
+                                 feature_names=feature_names, 
+                                 enable_detailed_analysis=True,
+                                 experiment_name=f"{experiment_name}_test")
+        
+        _, self.val_result = test(best_model, self.val_dataloader,
+                                feature_names=feature_names,
+                                enable_detailed_analysis=True, 
+                                experiment_name=f"{experiment_name}_val")
 
         self.get_score(self.test_result, self.val_result)
 
@@ -160,18 +175,76 @@ class Main():
         top1_best_info = get_best_performance_data(test_scores, test_labels, topk=1) 
         top1_val_info = get_val_performance_data(test_scores, normal_scores, test_labels, topk=1)
 
-
-        print('=========================** Result **============================\n')
+        print('\n' + '='*60)
+        print('** FINAL RESULTS **')
+        print('='*60)
 
         info = None
         if self.env_config['report'] == 'best':
             info = top1_best_info
+            print('Reporting BEST performance:')
         elif self.env_config['report'] == 'val':
             info = top1_val_info
+            print('Reporting VAL-based performance:')
 
-        print(f'F1 score: {info[0]}')
-        print(f'precision: {info[1]}')
-        print(f'recall: {info[2]}\n')
+        print(f'F1 score: {info[0]:.6f}')
+        print(f'Precision: {info[1]:.6f}') 
+        print(f'Recall: {info[2]:.6f}')
+        
+        # Additional detailed metrics
+        try:
+            from sklearn.metrics import roc_auc_score
+            if len(np.unique(test_labels)) > 1:
+                auc_score = roc_auc_score(test_labels, test_scores)
+                print(f'AUC Score: {auc_score:.6f}')
+        except Exception as e:
+            print(f'Could not calculate AUC: {e}')
+        
+        print(f'Dataset: {self.env_config["dataset"]}')
+        print(f'Features: {len(self.feature_map)}')
+        print(f'Test samples: {len(test_labels)}')
+        print(f'Anomalies in test: {sum(test_labels)} ({100*sum(test_labels)/len(test_labels):.2f}%)')
+        print('='*60)
+        
+        # Save final comprehensive results
+        try:
+            experiment_name = f"{self.env_config['dataset']}_seed{self.train_config['seed']}"
+            results_summary = {
+                'experiment_name': experiment_name,
+                'dataset': self.env_config['dataset'],
+                'config': self.train_config,
+                'final_metrics': {
+                    'f1_score': float(info[0]),
+                    'precision': float(info[1]),
+                    'recall': float(info[2])
+                },
+                'best_performance': {
+                    'f1_score': float(top1_best_info[0]),
+                    'precision': float(top1_best_info[1]),
+                    'recall': float(top1_best_info[2])
+                },
+                'val_performance': {
+                    'f1_score': float(top1_val_info[0]),
+                    'precision': float(top1_val_info[1]),
+                    'recall': float(top1_val_info[2])
+                },
+                'test_statistics': {
+                    'total_samples': len(test_labels),
+                    'anomaly_samples': sum(test_labels),
+                    'anomaly_ratio': sum(test_labels)/len(test_labels),
+                    'num_features': len(self.feature_map)
+                }
+            }
+            
+            # Save to results directory
+            results_path = self.get_save_path()[1].replace('.csv', '_final_summary.json')
+            with open(results_path, 'w') as f:
+                import json
+                json.dump(results_summary, f, indent=2)
+            print(f'Final results summary saved to: {results_path}')
+            
+        except Exception as e:
+            print(f'Warning: Could not save results summary: {e}')
 
 
     def get_save_path(self, feature_name=''):
@@ -215,6 +288,13 @@ if __name__ == "__main__":
     parser.add_argument('-topk', help='topk num', type = int, default=20)
     parser.add_argument('-report', help='best / val', type = str, default='best')
     parser.add_argument('-load_model_path', help='trained model path', type = str, default='')
+    
+    # Enhanced output and visualization options
+    parser.add_argument('-enable_detailed_analysis', help='enable detailed anomaly analysis', type=bool, default=True)
+    parser.add_argument('-enable_visualizations', help='enable result visualizations', type=bool, default=True)
+    parser.add_argument('-log_level', help='logging level (INFO/DEBUG)', type=str, default='INFO')
+    parser.add_argument('-save_intermediate_results', help='save intermediate training results', type=bool, default=True)
+    parser.add_argument('-visualization_interval', help='epochs between visualization updates', type=int, default=10)
 
     args = parser.parse_args()
 
@@ -241,6 +321,12 @@ if __name__ == "__main__":
         'decay': args.decay,
         'val_ratio': args.val_ratio,
         'topk': args.topk,
+        # Enhanced analysis options
+        'enable_detailed_analysis': args.enable_detailed_analysis,
+        'enable_visualizations': args.enable_visualizations,
+        'log_level': args.log_level,
+        'save_intermediate_results': args.save_intermediate_results,
+        'visualization_interval': args.visualization_interval,
     }
 
     env_config={
@@ -248,7 +334,10 @@ if __name__ == "__main__":
         'dataset': args.dataset,
         'report': args.report,
         'device': args.device,
-        'load_model_path': args.load_model_path
+        'load_model_path': args.load_model_path,
+        # Enhanced analysis options
+        'enable_detailed_analysis': args.enable_detailed_analysis,
+        'enable_visualizations': args.enable_visualizations,
     }
     
 
